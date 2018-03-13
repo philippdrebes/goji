@@ -1,23 +1,24 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
+	"syscall"
 
 	"github.com/akamensky/argparse"
 	"github.com/andygrunwald/go-jira"
-	"github.com/bgentry/speakeasy"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func main() {
 	fmt.Println("Hello Goji!")
 
-	// Create new parser object
 	parser := argparse.NewParser("print", "Prints provided string to stdout")
-	// Create string flag
 	user := parser.String("u", "user", &argparse.Options{Required: false, Help: "Username"})
-	// Parse input
 	err := parser.Parse(os.Args)
+
 	if err != nil {
 		// In case of error print error and print usage
 		// This can also be done by passing -h or --help flags
@@ -27,40 +28,45 @@ func main() {
 
 	username, password := getCredentials(*user)
 
-	tp := jira.CookieAuthTransport{
-		Username: username,
-		Password: password,
-		AuthURL:  "https://servicedesk.softec.ch/rest/auth/1/session",
+	tp := jira.BasicAuthTransport{
+		Username: strings.TrimSpace(username),
+		Password: strings.TrimSpace(password),
 	}
 
 	jiraClient, _ := jira.NewClient(tp.Client(), "https://servicedesk.softec.ch")
 
-	authenticated := jiraClient.Authentication.Authenticated()
-	session, _ := jiraClient.Authentication.GetCurrentUser()
-	u, _, _ := jiraClient.User.Get("pd")
-
-	fmt.Println(authenticated)
-	fmt.Println(session.Name)
-
-	if u != nil {
-		fmt.Printf("\nEmail: %v\nSuccess!\n", u.EmailAddress)
+	if err != nil {
+		fmt.Printf("\nerror: %v\n", err)
+		return
 	}
+
+	u, _, err := jiraClient.User.Get("pd")
+
+	if err != nil {
+		fmt.Printf("\nerror: %v\n", err)
+		return
+	}
+
+	fmt.Printf("\nEmail: %v\nSuccess!\n", u.EmailAddress)
 }
 
 func getCredentials(user string) (string, string) {
 	var username string
 	var password string
 
+	r := bufio.NewReader(os.Stdin)
+
+	//fmt.Print("Jira URL: ")
+	//jiraURL, _ := r.ReadString('\n')
+
 	if len(user) == 0 {
-		fmt.Print("Username: ")
-		fmt.Scanln(&username)
+		fmt.Print("Jira Username: ")
+		username, _ = r.ReadString('\n')
 	}
 
-	password, err := speakeasy.Ask("Password: ")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	fmt.Print("Jira Password: ")
+	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin))
+	password = string(bytePassword)
 
 	return username, password
 }
