@@ -29,8 +29,8 @@ func main() {
 	username, password := getCredentials(*user)
 
 	tp := jira.BasicAuthTransport{
-		Username: strings.TrimSpace(username),
-		Password: strings.TrimSpace(password),
+		Username: username,
+		Password: password,
 	}
 
 	jiraClient, _ := jira.NewClient(tp.Client(), "https://servicedesk.softec.ch")
@@ -40,14 +40,14 @@ func main() {
 		return
 	}
 
-	u, _, err := jiraClient.User.Get("pd")
+	u, _, err := jiraClient.User.Get(username)
 
 	if err != nil {
 		fmt.Printf("\nerror: %v\n", err)
 		return
 	}
 
-	fmt.Printf("\nEmail: %v\nSuccess!\n", u.EmailAddress)
+	fmt.Printf("\n\nLogged in as %v\n", u.EmailAddress)
 }
 
 func getCredentials(user string) (string, string) {
@@ -68,5 +68,5 @@ func getCredentials(user string) (string, string) {
 	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin))
 	password = string(bytePassword)
 
-	return username, password
+	return strings.TrimSpace(username), strings.TrimSpace(password)
 }
