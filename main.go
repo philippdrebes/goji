@@ -1,14 +1,17 @@
 package main
+
 import (
 	"fmt"
-	"github.com/andygrunwald/go-jira"
-	"github.com/akamensky/argparse"
 	"os"
+
+	"github.com/akamensky/argparse"
+	"github.com/andygrunwald/go-jira"
+	"github.com/bgentry/speakeasy"
 )
 
 func main() {
 	fmt.Println("Hello Goji!")
-	
+
 	// Create new parser object
 	parser := argparse.NewParser("print", "Prints provided string to stdout")
 	// Create string flag
@@ -30,9 +33,9 @@ func main() {
 	}
 
 	jiraClient, _ := jira.NewClient(tp.Client(), "https://servicedesk.softec.ch")
-	juser, _, _:=  jiraClient.User.Get("pd")
+	juser, _, _ := jiraClient.User.Get("pd")
 
-	if (juser != nil) {
+	if juser != nil {
 		fmt.Printf("Version: %s\n", juser.Name)
 	}
 }
@@ -41,13 +44,16 @@ func getCredentials(user string) (string, string) {
 	var username string
 	var password string
 
-	if (len(user) == 0) {
+	if len(user) == 0 {
 		fmt.Print("Username: ")
-		fmt.Scanf("%s", &username)
+		fmt.Scanln(&username)
 	}
 
-	fmt.Print("Password: ")
-	fmt.Scanf("%s", &password)
+	password, err := speakeasy.Ask("Password: ")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	return username, password
 }
