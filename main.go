@@ -27,16 +27,23 @@ func main() {
 
 	username, password := getCredentials(*user)
 
-	tp := jira.BasicAuthTransport{
+	tp := jira.CookieAuthTransport{
 		Username: username,
 		Password: password,
+		AuthURL:  "https://servicedesk.softec.ch/rest/auth/1/session",
 	}
 
 	jiraClient, _ := jira.NewClient(tp.Client(), "https://servicedesk.softec.ch")
-	juser, _, _ := jiraClient.User.Get("pd")
 
-	if juser != nil {
-		fmt.Printf("Version: %s\n", juser.Name)
+	authenticated := jiraClient.Authentication.Authenticated()
+	session, _ := jiraClient.Authentication.GetCurrentUser()
+	u, _, _ := jiraClient.User.Get("pd")
+
+	fmt.Println(authenticated)
+	fmt.Println(session.Name)
+
+	if u != nil {
+		fmt.Printf("\nEmail: %v\nSuccess!\n", u.EmailAddress)
 	}
 }
 
