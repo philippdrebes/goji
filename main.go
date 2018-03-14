@@ -8,8 +8,8 @@ import (
 	"syscall"
 
 	"github.com/akamensky/argparse"
-	"github.com/andygrunwald/go-jira"
 	"golang.org/x/crypto/ssh/terminal"
+	"./src"
 )
 
 func main() {
@@ -28,19 +28,15 @@ func main() {
 
 	username, password := getCredentials(*user)
 
-	tp := jira.BasicAuthTransport{
-		Username: username,
-		Password: password,
-	}
+	client := goji.NewClient("https://servicedesk.softec.ch", username, password)
 
-	jiraClient, _ := jira.NewClient(tp.Client(), "https://servicedesk.softec.ch")
 
 	if err != nil {
 		fmt.Printf("\nerror: %v\n", err)
 		return
 	}
 
-	u, _, err := jiraClient.User.Get(username)
+	u, _, err := client.JiraClient.User.Get(username)
 
 	if err != nil {
 		fmt.Printf("\nerror: %v\n", err)
@@ -70,3 +66,4 @@ func getCredentials(user string) (string, string) {
 
 	return strings.TrimSpace(username), strings.TrimSpace(password)
 }
+
