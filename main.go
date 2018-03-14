@@ -26,24 +26,41 @@ func main() {
 		return
 	}
 
+	client, err := login(user)
+
+	if client == nil || err != nil {
+		fmt.Printf("\nError while trying to log in.\n%v\n", err)
+		return
+	}
+
+	issues, err := client.GetAssignedTasks(*user)
+	if err != nil {
+		fmt.Printf("\nError while trying to get assigned issues.\n%v\n", err)
+		return
+	}
+
+	for index, element := range issues {
+		fmt.Printf("\n%d) %s", index + 1, element.Fields.Summary)
+	}
+
+}
+
+func login(user *string) (*goji.Client, error) {
 	username, password := getCredentials(*user)
-
-	client := goji.NewClient("https://servicedesk.softec.ch", username, password)
-
+	client, err := goji.NewClient("https://servicedesk.softec.ch", username, password)
 
 	if err != nil {
-		fmt.Printf("\nerror: %v\n", err)
-		return
+		return nil, err
 	}
 
 	u, _, err := client.JiraClient.User.Get(username)
 
 	if err != nil {
-		fmt.Printf("\nerror: %v\n", err)
-		return
+		return nil, err
 	}
 
 	fmt.Printf("\n\nLogged in as %v\n", u.EmailAddress)
+	return client, nil
 }
 
 func getCredentials(user string) (string, string) {
@@ -66,4 +83,3 @@ func getCredentials(user string) (string, string) {
 
 	return strings.TrimSpace(username), strings.TrimSpace(password)
 }
-
