@@ -57,11 +57,11 @@ func main() {
 }
 
 func promptForAction(actions []Action) *Action {
+	fmt.Println()
 	for index, element := range actions {
-		fmt.Printf("\n%d) %s", index+1, element.description)
+		fmt.Printf("%d) %s\n", index+1, element.description)
 	}
 
-	fmt.Println()
 	var input int
 	n, err := fmt.Scanln(&input)
 	if n < 1 || err != nil || n > len(actions) {
