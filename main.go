@@ -12,6 +12,13 @@ import (
 	"./src"
 )
 
+type fv func(client *goji.Client, user string)
+
+type Action struct {
+	description string
+	function    fv
+}
+
 func main() {
 	fmt.Println("Hello Goji!")
 
@@ -33,16 +40,48 @@ func main() {
 		return
 	}
 
-	issues, err := client.GetAssignedTasks(*user)
+	var actions []Action
+	actions = append(actions, Action{"Display assigned tasks", displayAssignedTasks})
+	actions = append(actions, Action{"Quit", nil})
+
+	for {
+		selectedAction := promptForAction(actions)
+		if selectedAction != nil {
+			if selectedAction.description == "Quit" {
+				os.Exit(2)
+			} else {
+				selectedAction.function(client, *user)
+			}
+		}
+	}
+}
+
+func promptForAction(actions []Action) *Action {
+	for index, element := range actions {
+		fmt.Printf("\n%d) %s", index+1, element.description)
+	}
+
+	fmt.Println()
+	var input int
+	n, err := fmt.Scanln(&input)
+	if n < 1 || err != nil || n > len(actions) {
+		fmt.Println("invalid input")
+		return nil
+	}
+
+	return &actions[input - 1]
+}
+
+func displayAssignedTasks(client *goji.Client, user string) {
+	issues, err := client.GetAssignedTasks(user)
 	if err != nil {
 		fmt.Printf("\nError while trying to get assigned issues.\n%v\n", err)
 		return
 	}
 
-	for index, element := range issues {
-		fmt.Printf("\n%d) %s", index + 1, element.Fields.Summary)
+	for _, element := range issues {
+		fmt.Printf("\n%s", element.Fields.Summary)
 	}
-
 }
 
 func login(user *string) (*goji.Client, error) {
@@ -68,9 +107,6 @@ func getCredentials(user string) (string, string) {
 	var password string
 
 	r := bufio.NewReader(os.Stdin)
-
-	//fmt.Print("Jira URL: ")
-	//jiraURL, _ := r.ReadString('\n')
 
 	if len(user) == 0 {
 		fmt.Print("Jira Username: ")
