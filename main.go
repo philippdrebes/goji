@@ -14,7 +14,7 @@ import (
 	"runtime"
 )
 
-type fv func(client *goji.Client, user string)
+type fv func(client *goji.Client)
 
 type Action struct {
 	description string
@@ -47,6 +47,7 @@ func CallClear() {
 }
 
 func main() {
+	CallClear()
 	fmt.Println("Hello Goji!")
 
 	parser := argparse.NewParser("print", "Prints provided string to stdout")
@@ -78,7 +79,7 @@ func main() {
 			if selectedAction.description == "Quit" {
 				os.Exit(2)
 			} else {
-				selectedAction.function(client, *user)
+				selectedAction.function(client)
 			}
 		}
 	}
@@ -100,8 +101,8 @@ func promptForAction(actions []Action) *Action {
 	return &actions[input - 1]
 }
 
-func displayAssignedTasks(client *goji.Client, user string) {
-	issues, err := client.GetAssignedTasks(user)
+func displayAssignedTasks(client *goji.Client) {
+	issues, err := client.GetAssignedTasks(client.CurrentUser.Name)
 	if err != nil {
 		fmt.Printf("\nError while trying to get assigned issues.\n%v\n", err)
 		return
