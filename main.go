@@ -80,7 +80,7 @@ func displayAssignedTasks(client *goji.Client, user string) {
 	}
 
 	for _, element := range issues {
-		fmt.Printf("\n%s", element.Fields.Summary)
+		fmt.Printf("\n%s - %s", element.Key, element.Fields.Summary)
 	}
 }
 
