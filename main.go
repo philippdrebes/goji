@@ -10,6 +10,8 @@ import (
 	"github.com/akamensky/argparse"
 	"golang.org/x/crypto/ssh/terminal"
 	"./src"
+	"os/exec"
+	"runtime"
 )
 
 type fv func(client *goji.Client, user string)
@@ -17,6 +19,31 @@ type fv func(client *goji.Client, user string)
 type Action struct {
 	description string
 	function    fv
+}
+
+var clear map[string]func() //create a map for storing clear funcs
+
+func init() {
+	clear = make(map[string]func()) //Initialize it
+	clear["linux"] = func() {
+		cmd := exec.Command("clear") //Linux example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+	clear["windows"] = func() {
+		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+}
+
+func CallClear() {
+	value, ok := clear[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
+	if ok { //if we defined a clear func for that platform:
+		value()  //we execute it
+	} else { //unsupported platform
+		panic("Your platform is unsupported! I can't clear terminal screen :(")
+	}
 }
 
 func main() {
@@ -46,6 +73,7 @@ func main() {
 
 	for {
 		selectedAction := promptForAction(actions)
+		CallClear()
 		if selectedAction != nil {
 			if selectedAction.description == "Quit" {
 				os.Exit(2)
@@ -82,6 +110,7 @@ func displayAssignedTasks(client *goji.Client, user string) {
 	for _, element := range issues {
 		fmt.Printf("\n%s - %s", element.Key, element.Fields.Summary)
 	}
+	fmt.Println()
 }
 
 func login(user *string) (*goji.Client, error) {
@@ -98,7 +127,8 @@ func login(user *string) (*goji.Client, error) {
 		return nil, err
 	}
 
-	fmt.Printf("\n\nLogged in as %v\n", u.EmailAddress)
+	CallClear()
+	fmt.Printf("Logged in as %v\n", u.EmailAddress)
 	return client, nil
 }
 
