@@ -12,11 +12,13 @@ import (
 	"./src"
 	"os/exec"
 	"runtime"
+	"github.com/atotto/clipboard"
 )
 
 type fv func(client *goji.Client)
 
 type Action struct {
+	key         string
 	description string
 	function    fv
 }
@@ -40,7 +42,7 @@ func init() {
 func CallClear() {
 	value, ok := clear[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
 	if ok { //if we defined a clear func for that platform:
-		value()  //we execute it
+		value() //we execute it
 	} else { //unsupported platform
 		panic("Your platform is unsupported! I can't clear terminal screen :(")
 	}
@@ -69,12 +71,11 @@ func main() {
 	}
 
 	var actions []Action
-	actions = append(actions, Action{"Display assigned tasks", displayAssignedTasks})
-	actions = append(actions, Action{"Quit", nil})
+	actions = append(actions, Action{"assignedTasks", "Display assigned tasks", displayAssignedTasks})
+	actions = append(actions, Action{"quit", "Quit", nil})
 
 	for {
 		selectedAction := promptForAction(actions)
-		CallClear()
 		if selectedAction != nil {
 			if selectedAction.description == "Quit" {
 				os.Exit(2)
@@ -82,6 +83,7 @@ func main() {
 				selectedAction.function(client)
 			}
 		}
+		CallClear()
 	}
 }
 
@@ -98,7 +100,7 @@ func promptForAction(actions []Action) *Action {
 		return nil
 	}
 
-	return &actions[input - 1]
+	return &actions[input-1]
 }
 
 func displayAssignedTasks(client *goji.Client) {
@@ -108,10 +110,26 @@ func displayAssignedTasks(client *goji.Client) {
 		return
 	}
 
-	for _, element := range issues {
-		fmt.Printf("\n%s - %s", element.Key, element.Fields.Summary)
+	var actions []Action
+	clipboardAction := Action{"clipboard", "Copy to clipboard", nil}
+	backAction := Action{"back", "Back", nil}
+	actions = append(actions, clipboardAction)
+	actions = append(actions, backAction)
+
+	for {
+		for _, element := range issues {
+			fmt.Printf("\n%s - %s", element.Key, element.Fields.Summary)
+		}
+		fmt.Println()
+
+		selectedAction := promptForAction(actions)
+		if selectedAction.key == clipboardAction.key {
+			clipboard.WriteAll("asdf")
+		} else if selectedAction.key == backAction.key {
+			fmt.Println()
+			return
+		}
 	}
-	fmt.Println()
 }
 
 func login(user *string) (*goji.Client, error) {
