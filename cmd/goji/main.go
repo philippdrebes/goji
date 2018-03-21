@@ -62,9 +62,9 @@ func main() {
 		return
 	}
 
-	var actions []goji.Action
-	actions = append(actions, goji.Action{"assignedTasks", "Display assigned tasks", displayAssignedTasks})
-	actions = append(actions, goji.Action{"quit", "Quit", nil})
+	var actions []Action
+	actions = append(actions, Action{"assignedTasks", "Display assigned tasks", displayAssignedTasks})
+	actions = append(actions, Action{"quit", "Quit", nil})
 
 	for {
 		selectedAction := promptForAction(actions)
@@ -79,7 +79,7 @@ func main() {
 	}
 }
 
-func promptForAction(actions []goji.Action) *goji.Action {
+func promptForAction(actions []Action) *Action {
 	fmt.Println()
 	for index, element := range actions {
 		fmt.Printf("%d) %s\n", index+1, element.Description)
@@ -102,9 +102,9 @@ func displayAssignedTasks(client *goji.Client) {
 		return
 	}
 
-	var actions []goji.Action
-	clipboardAction := goji.Action{"clipboard", "Copy to clipboard", nil}
-	backAction := goji.Action{"back", "Back", nil}
+	var actions []Action
+	clipboardAction := Action{"clipboard", "Copy to clipboard", nil}
+	backAction := Action{"back", "Back", nil}
 	actions = append(actions, clipboardAction)
 	actions = append(actions, backAction)
 
