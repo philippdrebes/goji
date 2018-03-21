@@ -9,10 +9,10 @@ import (
 
 	"github.com/akamensky/argparse"
 	"golang.org/x/crypto/ssh/terminal"
-	"./src"
 	"os/exec"
 	"runtime"
 	"github.com/atotto/clipboard"
+	"github.com/philippdrebes/goji"
 )
 
 type fv func(client *goji.Client)
