@@ -12,16 +12,8 @@ import (
 	"os/exec"
 	"runtime"
 	"github.com/atotto/clipboard"
-	"github.com/philippdrebes/goji"
+	"github.com/philippdrebes/goji/pkg/goji"
 )
-
-type fv func(client *goji.Client)
-
-type Action struct {
-	key         string
-	description string
-	function    fv
-}
 
 var clear map[string]func() //create a map for storing clear funcs
 
@@ -77,10 +69,10 @@ func main() {
 	for {
 		selectedAction := promptForAction(actions)
 		if selectedAction != nil {
-			if selectedAction.description == "Quit" {
+			if selectedAction.Description == "Quit" {
 				os.Exit(2)
 			} else {
-				selectedAction.function(client)
+				selectedAction.Function(client)
 			}
 		}
 		CallClear()
@@ -90,7 +82,7 @@ func main() {
 func promptForAction(actions []Action) *Action {
 	fmt.Println()
 	for index, element := range actions {
-		fmt.Printf("%d) %s\n", index+1, element.description)
+		fmt.Printf("%d) %s\n", index+1, element.Description)
 	}
 
 	var input int
@@ -123,9 +115,9 @@ func displayAssignedTasks(client *goji.Client) {
 		fmt.Println()
 
 		selectedAction := promptForAction(actions)
-		if selectedAction.key == clipboardAction.key {
-			clipboard.WriteAll("asdf")
-		} else if selectedAction.key == backAction.key {
+		if selectedAction.Key == clipboardAction.Key {
+			clipboard.WriteAll("asdf") // todo :shipit:
+		} else if selectedAction.Key == backAction.Key {
 			fmt.Println()
 			return
 		}
