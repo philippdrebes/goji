@@ -17,6 +17,14 @@ import (
 
 var clear map[string]func() //create a map for storing clear funcs
 
+type fv func(client *goji.Client)
+
+type Action struct {
+	Key         string
+	Description string
+	Function    fv
+}
+
 func init() {
 	clear = make(map[string]func()) //Initialize it
 	clear["linux"] = func() {
