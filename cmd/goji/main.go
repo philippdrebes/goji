@@ -12,16 +12,8 @@ import (
 	"os/exec"
 	"runtime"
 	"github.com/atotto/clipboard"
-	"github.com/philippdrebes/goji"
+	"github.com/philippdrebes/goji/pkg/goji"
 )
-
-type fv func(client *goji.Client)
-
-type Action struct {
-	key         string
-	description string
-	function    fv
-}
 
 var clear map[string]func() //create a map for storing clear funcs
 
@@ -70,27 +62,27 @@ func main() {
 		return
 	}
 
-	var actions []Action
-	actions = append(actions, Action{"assignedTasks", "Display assigned tasks", displayAssignedTasks})
-	actions = append(actions, Action{"quit", "Quit", nil})
+	var actions []goji.Action
+	actions = append(actions, goji.Action{"assignedTasks", "Display assigned tasks", displayAssignedTasks})
+	actions = append(actions, goji.Action{"quit", "Quit", nil})
 
 	for {
 		selectedAction := promptForAction(actions)
 		if selectedAction != nil {
-			if selectedAction.description == "Quit" {
+			if selectedAction.Description == "Quit" {
 				os.Exit(2)
 			} else {
-				selectedAction.function(client)
+				selectedAction.Function(client)
 			}
 		}
 		CallClear()
 	}
 }
 
-func promptForAction(actions []Action) *Action {
+func promptForAction(actions []goji.Action) *goji.Action {
 	fmt.Println()
 	for index, element := range actions {
-		fmt.Printf("%d) %s\n", index+1, element.description)
+		fmt.Printf("%d) %s\n", index+1, element.Description)
 	}
 
 	var input int
@@ -110,9 +102,9 @@ func displayAssignedTasks(client *goji.Client) {
 		return
 	}
 
-	var actions []Action
-	clipboardAction := Action{"clipboard", "Copy to clipboard", nil}
-	backAction := Action{"back", "Back", nil}
+	var actions []goji.Action
+	clipboardAction := goji.Action{"clipboard", "Copy to clipboard", nil}
+	backAction := goji.Action{"back", "Back", nil}
 	actions = append(actions, clipboardAction)
 	actions = append(actions, backAction)
 
@@ -123,9 +115,9 @@ func displayAssignedTasks(client *goji.Client) {
 		fmt.Println()
 
 		selectedAction := promptForAction(actions)
-		if selectedAction.key == clipboardAction.key {
-			clipboard.WriteAll("asdf")
-		} else if selectedAction.key == backAction.key {
+		if selectedAction.Key == clipboardAction.Key {
+			clipboard.WriteAll("asdf") // todo :shipit:
+		} else if selectedAction.Key == backAction.Key {
 			fmt.Println()
 			return
 		}
