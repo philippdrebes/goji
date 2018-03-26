@@ -26,14 +26,15 @@ type Action struct {
 }
 
 func init() {
-	clear = make(map[string]func()) //Initialize it
+	clear = make(map[string]func())
 	clear["linux"] = func() {
-		cmd := exec.Command("clear") //Linux example, its tested
+		cmd := exec.Command("clear")
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 	}
+	clear["darwin"] = clear["linux"]
 	clear["windows"] = func() {
-		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd := exec.Command("cmd", "/c", "cls")
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 	}
@@ -50,7 +51,7 @@ func CallClear() {
 
 func main() {
 	CallClear()
-	fmt.Println("Hello Goji!")
+	fmt.Println("\nGoji")
 
 	parser := argparse.NewParser("print", "Prints provided string to stdout")
 	user := parser.String("u", "user", &argparse.Options{Required: false, Help: "Username"})
@@ -63,7 +64,9 @@ func main() {
 		return
 	}
 
+	goji.GetConfig()
 	client, err := login(user)
+	CallClear()
 
 	if client == nil || err != nil {
 		fmt.Printf("\nError while trying to log in.\n%v\n", err)
@@ -75,10 +78,12 @@ func main() {
 	actions = append(actions, Action{"quit", "Quit", nil})
 
 	for {
+		fmt.Println("\nHello Goji!")
+		fmt.Printf("Logged in as %v\n", client.CurrentUser.EmailAddress)
 		selectedAction := promptForAction(actions)
 		if selectedAction != nil {
 			if selectedAction.Description == "Quit" {
-				os.Exit(2)
+				os.Exit(0)
 			} else {
 				selectedAction.Function(client)
 			}
@@ -99,6 +104,7 @@ func promptForAction(actions []Action) *Action {
 		fmt.Println("invalid input")
 		return nil
 	}
+	CallClear()
 
 	return &actions[input-1]
 }
@@ -117,14 +123,17 @@ func displayAssignedTasks(client *goji.Client) {
 	actions = append(actions, backAction)
 
 	for {
+		issueSummary := ""
 		for _, element := range issues {
-			fmt.Printf("\n%s - %s", element.Key, element.Fields.Summary)
+			issue := fmt.Sprintf("\n%s: %s", element.Key, element.Fields.Summary)
+			issueSummary += issue
 		}
+		fmt.Printf("%s\n", issueSummary)
 		fmt.Println()
 
 		selectedAction := promptForAction(actions)
 		if selectedAction.Key == clipboardAction.Key {
-			clipboard.WriteAll("asdf") // todo :shipit:
+			clipboard.WriteAll(issueSummary)
 		} else if selectedAction.Key == backAction.Key {
 			fmt.Println()
 			return
@@ -140,14 +149,7 @@ func login(user *string) (*goji.Client, error) {
 		return nil, err
 	}
 
-	u, _, err := client.JiraClient.User.Get(username)
-
-	if err != nil {
-		return nil, err
-	}
-
 	CallClear()
-	fmt.Printf("Logged in as %v\n", u.EmailAddress)
 	return client, nil
 }
 
