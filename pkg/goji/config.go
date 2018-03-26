@@ -7,14 +7,12 @@ import (
 
 type Config struct {
 	Username string `json:"username"`
-	Password string `json:"password"`
 	Url      string `json:"url"`
 }
 
 var DefaultConfig = Config{
-	Username: "username",
-	Password: "password",
-	Url:      "url",
+	Username: "",
+	Url:      "",
 }
 
 func GetConfig() Config {

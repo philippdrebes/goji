@@ -142,11 +142,40 @@ func displayAssignedTasks(client *goji.Client) {
 }
 
 func login(user *string) (*goji.Client, error) {
-	username, password := getCredentials(*user)
-	client, err := goji.NewClient("https://servicedesk.softec.ch", username, password)
+	r := bufio.NewReader(os.Stdin)
+
+	config := goji.GetConfig()
+	uname := config.Username
+
+	if len(*user) > 0 {
+		uname = *user
+	}
+
+	url := config.Url
+	if len(url) == 0 {
+		fmt.Print("Jira Url: ")
+		url, _ = r.ReadString('\n')
+	}
+
+	url = strings.TrimSpace(url)
+	if !strings.HasPrefix(url, "https://") {
+		url = "https://" + url
+	}
+
+	username, password := getCredentials(uname)
+	client, err := goji.NewClient(url, username, password)
 
 	if err != nil {
 		return nil, err
+	}
+
+	if len(url) == 0 {
+		fmt.Print("Save as default? [Y/n]: ")
+		save, _ := r.ReadString('\n')
+
+		if len(save) == 0 || strings.ToLower(save) == "y" {
+			// TODO save config
+		}
 	}
 
 	CallClear()
