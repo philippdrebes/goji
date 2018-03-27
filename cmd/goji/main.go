@@ -169,12 +169,14 @@ func login(user *string) (*goji.Client, error) {
 		return nil, err
 	}
 
-	if len(url) == 0 {
-		fmt.Print("Save as default? [Y/n]: ")
+	if len(config.Url) == 0 {
+		fmt.Print("\nSave as default? [Y/n]: ")
 		save, _ := r.ReadString('\n')
 
 		if len(save) == 0 || strings.ToLower(save) == "y" {
-			// TODO save config
+			config.Url = url
+			config.Username = username
+			goji.SaveConfig(config)
 		}
 	}
 

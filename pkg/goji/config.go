@@ -28,10 +28,9 @@ func GetConfig() Config {
 	return config
 }
 
-func SaveConfig() {
+func SaveConfig(config Config) {
 	configDirs := configdir.New("pd", "goji")
 
-	var config Config
 	data, _ := json.Marshal(&config)
 
 	// Stores to user folder
