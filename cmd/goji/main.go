@@ -66,12 +66,13 @@ func main() {
 
 	goji.GetConfig()
 	client, err := login(user)
-	CallClear()
 
 	if client == nil || err != nil {
 		fmt.Printf("\nError while trying to log in.\n%v\n", err)
 		return
 	}
+
+	CallClear()
 
 	var actions []Action
 	actions = append(actions, Action{"assignedTasks", "Display assigned tasks", displayAssignedTasks})
@@ -173,7 +174,7 @@ func login(user *string) (*goji.Client, error) {
 		fmt.Print("\nSave as default? [Y/n]: ")
 		save, _ := r.ReadString('\n')
 
-		if len(save) == 0 || strings.ToLower(save) == "y" {
+		if  strings.ToLower(strings.TrimSpace(save)) != "n" {
 			config.Url = url
 			config.Username = username
 			goji.SaveConfig(config)
