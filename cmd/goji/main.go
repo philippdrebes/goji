@@ -111,19 +111,21 @@ func promptForAction(actions []Action) *Action {
 }
 
 func displayAssignedTasks(client *goji.Client) {
-	issues, err := client.GetAssignedTasks(client.CurrentUser.Name)
-	if err != nil {
-		fmt.Printf("\nError while trying to get assigned issues.\n%v\n", err)
-		return
-	}
-
 	var actions []Action
 	clipboardAction := Action{"clipboard", "Copy to clipboard", nil}
+	refreshAction := Action{"refresh", "Refresh", nil}
 	backAction := Action{"back", "Back", nil}
 	actions = append(actions, clipboardAction)
+	actions = append(actions, refreshAction)
 	actions = append(actions, backAction)
 
 	for {
+		issues, err := client.GetAssignedTasks(client.CurrentUser.Name)
+		if err != nil {
+			fmt.Printf("\nError while trying to get assigned issues.\n%v\n", err)
+			return
+		}
+
 		issueSummary := ""
 		for _, element := range issues {
 			issue := fmt.Sprintf("\n%s: %s", element.Key, element.Fields.Summary)
