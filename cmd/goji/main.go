@@ -196,6 +196,8 @@ func getCredentials(user string) (string, string) {
 	if len(user) == 0 {
 		fmt.Print("Jira Username: ")
 		username, _ = r.ReadString('\n')
+	} else {
+		username = user
 	}
 
 	fmt.Print("Jira Password: ")
