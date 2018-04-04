@@ -54,7 +54,6 @@ func main() {
 	fmt.Println("\nGoji")
 
 	parser := argparse.NewParser("print", "Prints provided string to stdout")
-	user := parser.String("u", "user", &argparse.Options{Required: false, Help: "Username"})
 	err := parser.Parse(os.Args)
 
 	if err != nil {
@@ -65,7 +64,7 @@ func main() {
 	}
 
 	goji.GetConfig()
-	client, err := login(user)
+	client, err := login()
 
 	if client == nil || err != nil {
 		fmt.Printf("\nError while trying to log in.\n%v\n", err)
@@ -144,17 +143,30 @@ func displayAssignedTasks(client *goji.Client) {
 	}
 }
 
-func login(user *string) (*goji.Client, error) {
-	r := bufio.NewReader(os.Stdin)
+func login() (*goji.Client, error) {
+	url, username, password := getCredentials()
+	client, err := goji.NewClient(url, username, password)
 
-	config := goji.GetConfig()
-	uname := config.Username
-
-	if len(*user) > 0 {
-		uname = *user
+	if err != nil {
+		return nil, err
 	}
 
-	url := config.Url
+	CallClear()
+	return client, nil
+}
+
+func getCredentials() (string, string, string) {
+	var url string
+	var username string
+	var password string
+
+	config := goji.GetConfig()
+
+	url = config.Url
+	username = config.Username
+
+	r := bufio.NewReader(os.Stdin)
+
 	if len(url) == 0 {
 		fmt.Print("Jira Url: ")
 		url, _ = r.ReadString('\n')
@@ -165,12 +177,15 @@ func login(user *string) (*goji.Client, error) {
 		url = "https://" + url
 	}
 
-	username, password := getCredentials(uname)
-	client, err := goji.NewClient(url, username, password)
-
-	if err != nil {
-		return nil, err
+	if len(username) == 0 {
+		fmt.Print("Jira Username: ")
+		username, _ = r.ReadString('\n')
 	}
+	username = strings.TrimSpace(username)
+
+	fmt.Print("Jira Password: ")
+	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin))
+	password = strings.TrimSpace(string(bytePassword))
 
 	if len(config.Url) == 0 {
 		fmt.Print("\nSave as default? [Y/n]: ")
@@ -183,26 +198,5 @@ func login(user *string) (*goji.Client, error) {
 		}
 	}
 
-	CallClear()
-	return client, nil
-}
-
-func getCredentials(user string) (string, string) {
-	var username string
-	var password string
-
-	r := bufio.NewReader(os.Stdin)
-
-	if len(user) == 0 {
-		fmt.Print("Jira Username: ")
-		username, _ = r.ReadString('\n')
-	} else {
-		username = user
-	}
-
-	fmt.Print("Jira Password: ")
-	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin))
-	password = string(bytePassword)
-
-	return strings.TrimSpace(username), strings.TrimSpace(password)
+	return url, username, password
 }
