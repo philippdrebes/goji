@@ -12,7 +12,7 @@ import (
 	"os/exec"
 	"runtime"
 	"github.com/atotto/clipboard"
-	"github.com/philippdrebes/goji/pkg/goji"
+	"github.com/philippdrebes/goji"
 )
 
 var clear map[string]func() //create a map for storing clear funcs
