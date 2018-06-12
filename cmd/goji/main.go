@@ -75,6 +75,7 @@ func main() {
 
 	var actions []Action
 	actions = append(actions, Action{"assignedTasks", "Display assigned tasks", displayAssignedTasks})
+	actions = append(actions, Action{"linkedIssueGraph", "Display graph of linked issues", createLinkedIssueGraph})
 	actions = append(actions, Action{"quit", "Quit", nil})
 
 	for {
@@ -137,6 +138,25 @@ func displayAssignedTasks(client *goji.Client) {
 		if selectedAction.Key == clipboardAction.Key {
 			clipboard.WriteAll(issueSummary)
 		} else if selectedAction.Key == backAction.Key {
+			fmt.Println()
+			return
+		}
+	}
+}
+
+func createLinkedIssueGraph(client *goji.Client) {
+	var actions []Action
+	backAction := Action{"back", "Back", nil}
+	actions = append(actions, backAction)
+
+	for {
+		issue, _, _ := client.JiraClient.Issue.Get("SWECOWEB-14", nil)
+
+		graph := goji.BuildGraph(client.JiraClient, issue)
+		fmt.Printf(graph.String())
+
+		selectedAction := promptForAction(actions)
+		if selectedAction.Key == backAction.Key {
 			fmt.Println()
 			return
 		}
