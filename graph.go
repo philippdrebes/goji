@@ -71,14 +71,8 @@ func walk(client *jira.Client, issue *jira.Issue, graph *gographviz.Graph) *gogr
 
 		if graph.IsNode(wrapInQuotes(linkedIssue.Key)) == false {
 			walk(client, linkedIssue, graph)
-			//addNode(graph, linkedIssue)
 		}
-
-		if direction == inward {
-			graph.AddEdge(wrapInQuotes(issue.Key), wrapInQuotes(linkedIssue.Key), true, nil)
-		} else if direction == outward {
-			graph.AddEdge(wrapInQuotes(linkedIssue.Key), wrapInQuotes(issue.Key), true, nil)
-		}
+		graph.AddEdge(wrapInQuotes(issue.Key), wrapInQuotes(linkedIssue.Key), true, nil)
 	}
 
 	return graph

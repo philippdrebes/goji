@@ -15,3 +15,9 @@ make build
 ```shell session
 make install
 ```
+
+## Create Graph
+
+```shell session
+dot -Tpng > graph.png
+```
