@@ -11,6 +11,10 @@ const (
 	outward int = 1
 )
 
+func wrapInQuotes(value string) string {
+	return "\"" + value + "\""
+}
+
 func getStatusColor(issue *jira.Issue) string {
 	status := issue.Fields.Status.Name
 	if status == "IN PROGRESS" {
@@ -29,7 +33,7 @@ func addNode(graph *gographviz.Graph, issue *jira.Issue) {
 		//attrs[string(gographviz.FillColor)] = ""
 		//attrs[string(gographviz.Style)] = "filled"
 
-		graph.AddNode("G", "\""+issue.Key+"\"", attrs)
+		graph.AddNode("G", wrapInQuotes(issue.Key), attrs)
 	}
 }
 
@@ -60,6 +64,15 @@ func walk(client *jira.Client, issue *jira.Issue, graph *gographviz.Graph) *gogr
 		fmt.Printf("direction: %d\n", direction)
 		fmt.Printf("linked issue: %s\n", linkedIssue.Key)
 
+		if graph.IsNode(wrapInQuotes(linkedIssue.Key)) == false {
+			addNode(graph, linkedIssue)
+		}
+
+		if direction == inward {
+			graph.AddEdge(wrapInQuotes(issue.Key), wrapInQuotes(linkedIssue.Key), true, nil)
+		} else if direction == outward {
+			graph.AddEdge(wrapInQuotes(linkedIssue.Key), wrapInQuotes(issue.Key), true, nil)
+		}
 		walk(client, linkedIssue, graph)
 	}
 
