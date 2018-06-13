@@ -149,7 +149,11 @@ func displayAssignedTasks(client *goji.Client) {
 }
 
 func createLinkedIssueGraph(client *goji.Client) {
-	issue, _, _ := client.JiraClient.Issue.Get("SWECOWEB-14", nil)
+	issueKey := "SWECOWEB-14"
+	fmt.Printf("Loading issue %s\n", issueKey)
+	issue, _, _ := client.JiraClient.Issue.Get(issueKey, nil)
+
+	fmt.Println("Generating dependency graph in dot language")
 	graph := goji.BuildGraph(client.JiraClient, issue)
 
 	dotFile, err := ioutil.TempFile(os.TempDir(), "goji-deps")
@@ -160,6 +164,8 @@ func createLinkedIssueGraph(client *goji.Client) {
 	defer os.Remove(dotFile.Name())
 
 	err = ioutil.WriteFile(dotFile.Name(), []byte(graph.String()), 0755)
+
+	fmt.Println("Generating png from dot language")
 	png, err := exec.Command("dot", "-Tpng", dotFile.Name()).Output()
 	if err != nil {
 		fmt.Printf("\nError while creating graph.\n%v\n", err)
@@ -176,14 +182,14 @@ func createLinkedIssueGraph(client *goji.Client) {
 	pngFile := path.Join(exPath, fmt.Sprintf("%s_%d-%02d-%02d.png", issue.Key, now.Year(), now.Month(), now.Day()))
 
 	err = ioutil.WriteFile(pngFile, png, 0755)
-	//defer os.Remove(pngFile)
 
 	if err != nil {
 		fmt.Printf("\nError while saving graph.\n%v\n", err)
 		return
 	}
 
-	open.Run(pngFile)
+	fmt.Println("Done")
+	open.Start(pngFile)
 	return
 }
 
