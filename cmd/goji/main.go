@@ -13,6 +13,11 @@ import (
 	"runtime"
 	"github.com/atotto/clipboard"
 	"github.com/philippdrebes/goji"
+	"io/ioutil"
+	"path"
+	"time"
+	"github.com/skratchdot/open-golang/open"
+	"path/filepath"
 )
 
 var clear map[string]func() //create a map for storing clear funcs
@@ -63,7 +68,6 @@ func main() {
 		return
 	}
 
-	goji.GetConfig()
 	client, err := login()
 
 	if client == nil || err != nil {
@@ -145,22 +149,42 @@ func displayAssignedTasks(client *goji.Client) {
 }
 
 func createLinkedIssueGraph(client *goji.Client) {
-	var actions []Action
-	backAction := Action{"back", "Back", nil}
-	actions = append(actions, backAction)
+	issue, _, _ := client.JiraClient.Issue.Get("SWECOWEB-14", nil)
+	graph := goji.BuildGraph(client.JiraClient, issue)
 
-	for {
-		issue, _, _ := client.JiraClient.Issue.Get("SWECOWEB-14", nil)
-
-		graph := goji.BuildGraph(client.JiraClient, issue)
-		fmt.Printf(graph.String())
-
-		selectedAction := promptForAction(actions)
-		if selectedAction.Key == backAction.Key {
-			fmt.Println()
-			return
-		}
+	dotFile, err := ioutil.TempFile(os.TempDir(), "goji-deps")
+	if err != nil {
+		fmt.Printf("\nError while opening temp dotFile.\n%v\n", err)
+		return
 	}
+	defer os.Remove(dotFile.Name())
+
+	err = ioutil.WriteFile(dotFile.Name(), []byte(graph.String()), 0755)
+	png, err := exec.Command("dot", "-Tpng", dotFile.Name()).Output()
+	if err != nil {
+		fmt.Printf("\nError while creating graph.\n%v\n", err)
+		return
+	}
+
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+
+	now := time.Now()
+	pngFile := path.Join(exPath, fmt.Sprintf("%s_%d-%02d-%02d.png", issue.Key, now.Year(), now.Month(), now.Day()))
+
+	err = ioutil.WriteFile(pngFile, png, 0755)
+	//defer os.Remove(pngFile)
+
+	if err != nil {
+		fmt.Printf("\nError while saving graph.\n%v\n", err)
+		return
+	}
+
+	open.Run(pngFile)
+	return
 }
 
 func login() (*goji.Client, error) {
@@ -211,7 +235,7 @@ func getCredentials() (string, string, string) {
 		fmt.Print("\nSave as default? [Y/n]: ")
 		save, _ := r.ReadString('\n')
 
-		if  strings.ToLower(strings.TrimSpace(save)) != "n" {
+		if strings.ToLower(strings.TrimSpace(save)) != "n" {
 			config.Url = url
 			config.Username = username
 			goji.SaveConfig(config)

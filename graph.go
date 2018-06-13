@@ -3,12 +3,6 @@ package goji
 import (
 	"github.com/andygrunwald/go-jira"
 	"github.com/awalterschulze/gographviz"
-	"fmt"
-)
-
-const (
-	inward  int = 0
-	outward int = 1
 )
 
 func wrapInQuotes(value string) string {
@@ -48,16 +42,10 @@ func walk(client *jira.Client, issue *jira.Issue, graph *gographviz.Graph) *gogr
 	addNode(graph, issue)
 
 	for _, li := range issue.Fields.IssueLinks {
-		fmt.Printf("issue: %s\n", issue.Key)
-
-		var direction int
 		var linkedIssue *jira.Issue
-
 		if li.InwardIssue != nil {
-			direction = inward
 			linkedIssue = li.InwardIssue
 		} else if li.OutwardIssue != nil {
-			direction = outward
 			linkedIssue = li.OutwardIssue
 		}
 
@@ -65,9 +53,6 @@ func walk(client *jira.Client, issue *jira.Issue, graph *gographviz.Graph) *gogr
 		if err != nil {
 			panic(err)
 		}
-
-		fmt.Printf("direction: %d\n", direction)
-		fmt.Printf("linked issue: %s\n", linkedIssue.Key)
 
 		if graph.IsNode(wrapInQuotes(linkedIssue.Key)) == false {
 			walk(client, linkedIssue, graph)
