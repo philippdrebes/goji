@@ -46,6 +46,7 @@ func walk(client *jira.Client, issue *jira.Issue, graph *gographviz.Graph) *gogr
 		if err := graph.SetDir(true); err != nil {
 			panic(err)
 		}
+		graph.Attrs.Add(string(gographviz.DPI), "300")
 	}
 
 	addNode(graph, issue)
