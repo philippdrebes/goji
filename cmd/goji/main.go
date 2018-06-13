@@ -13,6 +13,11 @@ import (
 	"runtime"
 	"github.com/atotto/clipboard"
 	"github.com/philippdrebes/goji"
+	"io/ioutil"
+	"path"
+	"time"
+	"github.com/skratchdot/open-golang/open"
+	"path/filepath"
 )
 
 var clear map[string]func() //create a map for storing clear funcs
@@ -63,7 +68,6 @@ func main() {
 		return
 	}
 
-	goji.GetConfig()
 	client, err := login()
 
 	if client == nil || err != nil {
@@ -75,6 +79,7 @@ func main() {
 
 	var actions []Action
 	actions = append(actions, Action{"assignedTasks", "Display assigned tasks", displayAssignedTasks})
+	actions = append(actions, Action{"linkedIssueGraph", "Display graph of linked issues", createLinkedIssueGraph})
 	actions = append(actions, Action{"quit", "Quit", nil})
 
 	for {
@@ -143,6 +148,54 @@ func displayAssignedTasks(client *goji.Client) {
 	}
 }
 
+func createLinkedIssueGraph(client *goji.Client) {
+	var issueKey string
+	fmt.Println("Issue:")
+	fmt.Scanf("%s", &issueKey)
+
+	fmt.Printf("Loading issue %s\n", issueKey)
+	issue, _, _ := client.JiraClient.Issue.Get(issueKey, nil)
+
+	fmt.Println("Generating dependency graph in dot language")
+	graph := goji.BuildGraph(client.JiraClient, issue)
+
+	dotFile, err := ioutil.TempFile(os.TempDir(), "goji-deps")
+	if err != nil {
+		fmt.Printf("\nError while opening temp dotFile.\n%v\n", err)
+		return
+	}
+	defer os.Remove(dotFile.Name())
+
+	err = ioutil.WriteFile(dotFile.Name(), []byte(graph.String()), 0755)
+
+	fmt.Println("Generating png from dot language")
+	png, err := exec.Command("dot", "-Tpng", dotFile.Name()).Output()
+	if err != nil {
+		fmt.Printf("\nError while creating graph.\n%v\n", err)
+		return
+	}
+
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+
+	now := time.Now()
+	pngFile := path.Join(exPath, fmt.Sprintf("%s_%d-%02d-%02d.png", issue.Key, now.Year(), now.Month(), now.Day()))
+
+	err = ioutil.WriteFile(pngFile, png, 0755)
+
+	if err != nil {
+		fmt.Printf("\nError while saving graph.\n%v\n", err)
+		return
+	}
+
+	fmt.Println("Done")
+	open.Start(pngFile)
+	return
+}
+
 func login() (*goji.Client, error) {
 	url, username, password := getCredentials()
 	client, err := goji.NewClient(url, username, password)
@@ -191,7 +244,7 @@ func getCredentials() (string, string, string) {
 		fmt.Print("\nSave as default? [Y/n]: ")
 		save, _ := r.ReadString('\n')
 
-		if  strings.ToLower(strings.TrimSpace(save)) != "n" {
+		if strings.ToLower(strings.TrimSpace(save)) != "n" {
 			config.Url = url
 			config.Username = username
 			goji.SaveConfig(config)
