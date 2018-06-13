@@ -149,7 +149,10 @@ func displayAssignedTasks(client *goji.Client) {
 }
 
 func createLinkedIssueGraph(client *goji.Client) {
-	issueKey := "SWECOWEB-14"
+	var issueKey string
+	fmt.Println("Issue:")
+	fmt.Scanf("%s", &issueKey)
+
 	fmt.Printf("Loading issue %s\n", issueKey)
 	issue, _, _ := client.JiraClient.Issue.Get(issueKey, nil)
 
