@@ -35,7 +35,7 @@ func addNode(graph *gographviz.Graph, issue *jira.Issue) {
 	attrs[string(gographviz.Shape)] = "box"
 	attrs[string(gographviz.FillColor)] = getStatusColor(issue)
 	attrs[string(gographviz.Style)] = "filled"
-	attrs[string(gographviz.Label)] = wrapInQuotes(fmt.Sprintf("%s\n%s", issue.Key, issue.Fields.Summary))
+	attrs[string(gographviz.Label)] = wrapInQuotes(fmt.Sprintf("%s\n%s\n%s", issue.Key, issue.Fields.Summary, issue.Fields.Status.Name))
 
 	graph.AddNode("G", wrapInQuotes(issue.Key), attrs)
 }
