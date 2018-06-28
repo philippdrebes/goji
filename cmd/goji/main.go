@@ -164,7 +164,7 @@ func displayAssignedTasks(client *goji.Client) {
 
 func createLinkedIssueGraph(client *goji.Client) {
 	var issueKey string
-	fmt.Println("Issue:")
+	fmt.Println("Issue (or enter 'q' to go back):")
 	fmt.Scanf("%s", &issueKey)
 
 	if issueKey == "q" {
