@@ -11,13 +11,13 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 	"os/exec"
 	"runtime"
-	"github.com/atotto/clipboard"
 	"github.com/philippdrebes/goji"
 	"io/ioutil"
 	"path"
 	"time"
 	"github.com/skratchdot/open-golang/open"
 	"path/filepath"
+	"github.com/atotto/clipboard"
 )
 
 var clear map[string]func() //create a map for storing clear funcs
@@ -98,7 +98,7 @@ func main() {
 }
 
 func promptForAction(actions []Action) *Action {
-	fmt.Println()
+	fmt.Println("\n-----------------------------------------------")
 	for index, element := range actions {
 		fmt.Printf("%d) %s\n", index+1, element.Description)
 	}
@@ -130,17 +130,29 @@ func displayAssignedTasks(client *goji.Client) {
 			return
 		}
 
-		issueSummary := ""
+		issueSummary := map[string][]string{}
+
 		for _, element := range issues {
-			issue := fmt.Sprintf("\n%s: %s", element.Key, element.Fields.Summary)
-			issueSummary += issue
+			if _, contains := issueSummary[element.Fields.Status.Name]; !contains {
+				issueSummary[element.Fields.Status.Name] = []string{}
+			}
+			issue := fmt.Sprintf("%s: %s", element.Key, element.Fields.Summary)
+			issueSummary[element.Fields.Status.Name] = append(issueSummary[element.Fields.Status.Name], issue)
 		}
-		fmt.Printf("%s\n", issueSummary)
-		fmt.Println()
+
+		issueSummaryString := ""
+		for key, element := range issueSummary {
+			issueSummaryString += fmt.Sprintf("\n%s", key)
+			for _, i := range element {
+				issueSummaryString += fmt.Sprintf("\n%s", i)
+			}
+			issueSummaryString += fmt.Sprintf("\n")
+		}
+		fmt.Print(issueSummaryString)
 
 		selectedAction := promptForAction(actions)
 		if selectedAction.Key == clipboardAction.Key {
-			clipboard.WriteAll(issueSummary)
+			clipboard.WriteAll(issueSummaryString)
 		} else if selectedAction.Key == backAction.Key {
 			fmt.Println()
 			return
