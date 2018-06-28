@@ -2,7 +2,7 @@
 # Use of this source code is governed by a MIT-style license that can
 # be found in the LICENSE file.
 
-VERSION = 0.3.0
+VERSION = 0.3.1
 PACKAGE = github.com/philippdrebes/goji/cmd/goji
 
 run:
