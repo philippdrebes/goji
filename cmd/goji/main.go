@@ -179,13 +179,16 @@ func createLinkedIssueGraph(client *goji.Client) {
 	if err != nil {
 		panic(err)
 	}
-	exPath := filepath.Dir(ex)
+
+	outPath := path.Join(filepath.Dir(ex), "goji-files")
+	if _, err := os.Stat(outPath); os.IsNotExist(err) {
+		os.Mkdir(outPath, os.ModeDir)
+	}
 
 	now := time.Now()
-	pngFile := path.Join(exPath, fmt.Sprintf("%s_%d-%02d-%02d.png", issue.Key, now.Year(), now.Month(), now.Day()))
+	pngFile := path.Join(outPath, fmt.Sprintf("%s_%d-%02d-%02d.png", issue.Key, now.Year(), now.Month(), now.Day()))
 
 	err = ioutil.WriteFile(pngFile, png, 0755)
-
 	if err != nil {
 		fmt.Printf("\nError while saving graph.\n%v\n", err)
 		return
