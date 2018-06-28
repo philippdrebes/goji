@@ -105,12 +105,12 @@ func promptForAction(actions []Action) *Action {
 
 	var input int
 	n, err := fmt.Scanln(&input)
-	if n < 1 || err != nil || n > len(actions) {
+	defer CallClear()
+
+	if n < 1 || err != nil || input > len(actions) {
 		fmt.Println("invalid input")
 		return nil
 	}
-	CallClear()
-
 	return &actions[input-1]
 }
 
@@ -151,11 +151,13 @@ func displayAssignedTasks(client *goji.Client) {
 		fmt.Print(issueSummaryString)
 
 		selectedAction := promptForAction(actions)
-		if selectedAction.Key == clipboardAction.Key {
-			clipboard.WriteAll(issueSummaryString)
-		} else if selectedAction.Key == backAction.Key {
-			fmt.Println()
-			return
+		if selectedAction != nil {
+			if selectedAction.Key == clipboardAction.Key {
+				clipboard.WriteAll(issueSummaryString)
+			} else if selectedAction.Key == backAction.Key {
+				fmt.Println()
+				return
+			}
 		}
 	}
 }
@@ -164,6 +166,10 @@ func createLinkedIssueGraph(client *goji.Client) {
 	var issueKey string
 	fmt.Println("Issue:")
 	fmt.Scanf("%s", &issueKey)
+
+	if issueKey == "q" {
+		return
+	}
 
 	fmt.Printf("Loading issue %s\n", issueKey)
 	issue, _, _ := client.JiraClient.Issue.Get(issueKey, nil)
