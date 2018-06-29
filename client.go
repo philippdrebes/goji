@@ -6,7 +6,7 @@ import (
 )
 
 type Client struct {
-	JiraClient *jira.Client
+	JiraClient  *jira.Client
 	CurrentUser *jira.User
 }
 
@@ -38,5 +38,13 @@ func (c Client) GetAssignedTasks(user string) ([]jira.Issue, error) {
 	}
 
 	issues, _, err := c.JiraClient.Issue.Search(fmt.Sprintf("assignee in (%s)", user), nil)
+	return issues, err
+}
+
+func (c Client) GetCurrentUserWorklog(daysInThePast int) ([]jira.Issue, error) {
+	var jql string
+	hours := 24 * daysInThePast
+	jql = fmt.Sprintf("updatedDate >= startOfDay(\"-%dh\") and updatedDate < endOfDay(\"-%dh\") AND assignee was currentUser() ORDER BY updatedDate ASC", hours, hours)
+	issues, _, err := c.JiraClient.Issue.Search(jql, nil)
 	return issues, err
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"path/filepath"
 	"github.com/atotto/clipboard"
+	"sort"
 )
 
 var clear map[string]func() //create a map for storing clear funcs
@@ -29,6 +30,8 @@ type Action struct {
 	Description string
 	Function    fv
 }
+
+const dateFormat = "02.01.2006"
 
 func init() {
 	clear = make(map[string]func())
@@ -78,8 +81,9 @@ func main() {
 	CallClear()
 
 	var actions []Action
-	actions = append(actions, Action{"assignedTasks", "Display assigned tasks", displayAssignedTasks})
-	actions = append(actions, Action{"linkedIssueGraph", "Display graph of linked issues", createLinkedIssueGraph})
+	actions = append(actions, Action{"assignedTasks", "Assigned issues", displayAssignedTasks})
+	actions = append(actions, Action{"worklog", "Work log", displayWorklog})
+	actions = append(actions, Action{"linkedIssueGraph", "Linked issue graph", createLinkedIssueGraph})
 	actions = append(actions, Action{"quit", "Quit", nil})
 
 	for {
@@ -154,6 +158,64 @@ func displayAssignedTasks(client *goji.Client) {
 		if selectedAction != nil {
 			if selectedAction.Key == clipboardAction.Key {
 				clipboard.WriteAll(issueSummaryString)
+			} else if selectedAction.Key == backAction.Key {
+				fmt.Println()
+				return
+			}
+		}
+	}
+}
+
+func displayWorklog(client *goji.Client) {
+	var actions []Action
+	clipboardAction := Action{"clipboard", "Copy to clipboard", nil}
+	refreshAction := Action{"refresh", "Refresh", nil}
+	backAction := Action{"back", "Back", nil}
+	actions = append(actions, clipboardAction)
+	actions = append(actions, refreshAction)
+	actions = append(actions, backAction)
+
+
+	for {
+		var dates []time.Time
+		workLog := map[string][]string{}
+
+		for i := 0; i < 5; i++ {
+			logDate := time.Now().Local().AddDate(0, 0, -i)
+			dates = append(dates, logDate)
+			dateString := logDate.Format(dateFormat)
+			workLog[dateString] = []string{}
+
+			issues, err := client.GetCurrentUserWorklog(i)
+			if err != nil {
+				fmt.Printf("\nError while trying to get issues.\n%v\n", err)
+				return
+			}
+
+			for _, element := range issues {
+				workLog[dateString] = append(workLog[dateString], fmt.Sprintf("%s: %s", element.Key, element.Fields.Summary))
+			}
+		}
+		sort.Slice(dates, func(i, j int) bool { return dates[i].Before(dates[j])})
+
+		worklogString := ""
+		for _, date := range dates {
+			key := date.Format(dateFormat)
+			element := workLog[key]
+			if len(element) > 0 {
+				worklogString += fmt.Sprintf("\n- %s -", key)
+				for _, i := range element {
+					worklogString += fmt.Sprintf("\n%s", i)
+				}
+				worklogString += fmt.Sprintf("\n")
+			}
+		}
+		fmt.Print(worklogString)
+
+		selectedAction := promptForAction(actions)
+		if selectedAction != nil {
+			if selectedAction.Key == clipboardAction.Key {
+				clipboard.WriteAll(worklogString)
 			} else if selectedAction.Key == backAction.Key {
 				fmt.Println()
 				return
