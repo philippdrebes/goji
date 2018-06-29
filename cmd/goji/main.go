@@ -180,7 +180,7 @@ func displayWorklog(client *goji.Client) {
 		var dates []time.Time
 		workLog := map[string][]string{}
 
-		for i := 0; i < 5; i++ {
+		for i := 0; i < 31; i++ {
 			logDate := time.Now().Local().AddDate(0, 0, -i)
 			dates = append(dates, logDate)
 			dateString := logDate.Format(dateFormat)
