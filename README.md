@@ -5,6 +5,7 @@ goji is the simple and fast way to access [Atlassian Jira](https://atlassian.com
 ## Features
  - Display a users pending tasks
  - Generate issue dependency graph
+ - Copy work log to clipboard
 
 ## Requirements
  - [graphviz](http://www.graphviz.org/download/) 
